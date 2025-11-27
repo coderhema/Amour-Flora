@@ -1,0 +1,346 @@
+import React, { useState, useEffect } from 'react';
+import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerRequest, LetterCategory } from './types';
+import { generateLetter, generateFlower } from './services/geminiService';
+import { LETTER_TEMPLATES } from './data/templates';
+import { Button } from './components/Button';
+import { TextInput, TextArea, Select } from './components/Input';
+import { LetterView } from './components/LetterView';
+import { FlowerView } from './components/FlowerView';
+
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<AppTab>(AppTab.LETTERS);
+  const [loading, setLoading] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  // States
+  const [draftContent, setDraftContent] = useState<string>('');
+  const [generatedFlower, setGeneratedFlower] = useState<string | null>(null);
+
+  // AI Form States
+  const [showAIForm, setShowAIForm] = useState(false);
+  const [letterForm, setLetterForm] = useState<LetterRequest>({
+    recipient: '',
+    occasion: LetterOccasion.LOVE,
+    tone: LetterTone.ROMANTIC,
+    details: ''
+  });
+
+  const [flowerForm, setFlowerForm] = useState<FlowerRequest>({
+    flowerType: 'Roses',
+    colorPalette: 'Ruby Red',
+    style: FlowerStyle.OIL_PAINTING
+  });
+
+  // Check URL for shared note
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const note = params.get('note');
+    if (note) {
+      try {
+        setDraftContent(decodeURIComponent(note));
+        setIsPreviewMode(true);
+      } catch (e) {
+        console.error("Failed to parse note from URL");
+      }
+    }
+  }, []);
+
+  // Template Filtering
+  const [selectedCategory, setSelectedCategory] = useState<LetterCategory>(LetterCategory.PERSONAL);
+  const filteredTemplates = LETTER_TEMPLATES.filter(t => t.category === selectedCategory);
+
+  const handleTemplateSelect = (content: string) => {
+    setDraftContent(content);
+    setIsPreviewMode(false); // Ensure we are in edit mode to see it
+  };
+
+  const handleReset = () => {
+    setIsPreviewMode(false);
+    setDraftContent('');
+    setActiveTab(AppTab.LETTERS);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Clear URL without refreshing so user is on a "fresh" page
+    window.history.pushState({}, document.title, window.location.pathname);
+  };
+
+  const handleAIGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!letterForm.recipient || !letterForm.details) return;
+    
+    setLoading(true);
+    try {
+      const result = await generateLetter(letterForm);
+      setDraftContent(result);
+      setShowAIForm(false); // Collapse AI form after success
+    } catch (error) {
+      alert("Failed to generate letter. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFlowerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!flowerForm.flowerType) return;
+
+    setLoading(true);
+    setGeneratedFlower(null);
+    try {
+      const result = await generateFlower(flowerForm);
+      setGeneratedFlower(result);
+    } catch (error) {
+      alert("Failed to generate flower. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-50 selection:bg-rose-200 selection:text-rose-900 pb-20 font-sans">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-rose-100">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={handleReset}>
+            <span className="text-3xl">🌹</span>
+            <h1 className="font-serif text-2xl font-semibold text-stone-800 tracking-tight">
+              Amour <span className="text-rose-500">&</span> Flora
+            </h1>
+          </div>
+
+          {/* Github Link */}
+          <a 
+            href="https://github.com/coderhema/Amour-Flora" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-stone-400 hover:text-stone-800 transition-colors p-2 rounded-full hover:bg-stone-100"
+            aria-label="View on GitHub"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.245 3.285-1.245.675 1.65.24 2.88.12 3.18.765.84 1.23 1.92 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+          </a>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-6 pt-10">
+        
+        {/* Tab Navigation (Hidden in Preview Mode) */}
+        {!isPreviewMode && (
+          <div className="flex justify-center mb-12">
+            <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-stone-200 flex gap-1">
+              <button
+                onClick={() => setActiveTab(AppTab.LETTERS)}
+                className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  activeTab === AppTab.LETTERS 
+                    ? 'bg-rose-50 text-rose-700 shadow-sm' 
+                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                }`}
+              >
+                Letter Writer
+              </button>
+              <button
+                onClick={() => setActiveTab(AppTab.FLOWERS)}
+                className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  activeTab === AppTab.FLOWERS 
+                    ? 'bg-emerald-50 text-emerald-700 shadow-sm' 
+                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-50'
+                }`}
+              >
+                Flower Garden
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Letter Writer Section */}
+        {activeTab === AppTab.LETTERS && (
+          <div className="transition-opacity duration-300">
+            {isPreviewMode ? (
+              <LetterView 
+                content={draftContent} 
+                onEdit={() => {
+                  setIsPreviewMode(false);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }} 
+                onReset={handleReset}
+              />
+            ) : (
+              <div className="max-w-3xl mx-auto space-y-8">
+                <div className="text-center mb-8">
+                  <h2 className="font-serif text-4xl text-stone-800 mb-4">Craft Your Sentiment</h2>
+                  <p className="text-stone-500">Choose a template, write from the heart, or let AI guide you.</p>
+                </div>
+
+                {/* 1. Template Selector */}
+                <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm">
+                  <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2">
+                    {Object.values(LetterCategory).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                          selectedCategory === cat 
+                            ? 'bg-rose-100 text-rose-800' 
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {filteredTemplates.map((template) => (
+                      <button
+                        key={template.id}
+                        onClick={() => handleTemplateSelect(template.content)}
+                        className="text-left p-3 rounded-lg border border-stone-200 hover:border-rose-300 hover:bg-rose-50 transition-all text-xs md:text-sm"
+                      >
+                        <span className="font-medium text-stone-700 block mb-1">{template.title}</span>
+                        <span className="text-stone-400 text-[10px] line-clamp-2">{template.content}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Main Editor */}
+                <div className="bg-white p-1 rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100">
+                  <textarea 
+                    className="w-full min-h-[300px] p-6 rounded-xl outline-none resize-y text-lg leading-relaxed text-stone-700 placeholder:text-stone-300 font-serif bg-transparent"
+                    placeholder="Your letter will appear here. Start writing or select a template..."
+                    value={draftContent}
+                    onChange={(e) => setDraftContent(e.target.value)}
+                  />
+                  <div className="bg-stone-50 px-4 py-3 rounded-b-xl flex justify-between items-center border-t border-stone-100">
+                    <span className="text-xs text-stone-400 font-medium uppercase tracking-wider">
+                      {draftContent.length} characters
+                    </span>
+                    <Button 
+                      onClick={() => {
+                        setIsPreviewMode(true);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }} 
+                      disabled={!draftContent.trim()}
+                    >
+                      Preview & Sign
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 3. AI Assistant Toggle */}
+                <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
+                  <button 
+                    onClick={() => setShowAIForm(!showAIForm)}
+                    className="w-full flex items-center justify-between p-4 bg-stone-50 hover:bg-stone-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 text-stone-700 font-medium">
+                      <span className="text-xl">✨</span>
+                      <span>Need help writing? Use AI Assistant</span>
+                    </div>
+                    <svg 
+                      className={`w-5 h-5 text-stone-400 transition-transform ${showAIForm ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {showAIForm && (
+                    <div className="p-6 border-t border-stone-100 bg-white animate-fade-in">
+                      <form onSubmit={handleAIGenerate} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <TextInput 
+                            label="Recipient Name" 
+                            placeholder="e.g. My Beloved"
+                            value={letterForm.recipient}
+                            onChange={(e) => setLetterForm({...letterForm, recipient: e.target.value})}
+                          />
+                          <Select 
+                            label="Occasion"
+                            value={letterForm.occasion}
+                            onChange={(e) => setLetterForm({...letterForm, occasion: e.target.value as LetterOccasion})}
+                            options={Object.values(LetterOccasion).map(v => ({ label: v, value: v }))}
+                          />
+                        </div>
+                        <Select 
+                          label="Tone of Voice"
+                          value={letterForm.tone}
+                          onChange={(e) => setLetterForm({...letterForm, tone: e.target.value as LetterTone})}
+                          options={Object.values(LetterTone).map(v => ({ label: v, value: v }))}
+                        />
+                        <TextArea 
+                          label="Key Memories or Details"
+                          placeholder="What specific things should the letter mention?"
+                          value={letterForm.details}
+                          onChange={(e) => setLetterForm({...letterForm, details: e.target.value})}
+                        />
+                        <Button type="submit" className="w-full" isLoading={loading} variant="secondary">
+                          Generate Draft
+                        </Button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Flower Generator (Unchanged mostly, just simpler wrapper) */}
+        {activeTab === AppTab.FLOWERS && (
+          <div className="transition-opacity duration-300">
+             {!generatedFlower ? (
+               <div className="max-w-2xl mx-auto">
+                <div className="text-center mb-10">
+                  <h2 className="font-serif text-4xl text-stone-800 mb-4">Bloom a New Creation</h2>
+                  <p className="text-stone-500">Visualize unique floral arrangements in your favorite style.</p>
+                </div>
+
+                <form onSubmit={handleFlowerSubmit} className="space-y-6 bg-white p-8 rounded-3xl shadow-xl shadow-stone-200/40 border border-white">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <TextInput 
+                      label="Flower Type" 
+                      placeholder="e.g. Peonies, Wildflowers"
+                      value={flowerForm.flowerType}
+                      onChange={(e) => setFlowerForm({...flowerForm, flowerType: e.target.value})}
+                      required
+                    />
+                    <TextInput 
+                      label="Color Palette" 
+                      placeholder="e.g. Pastel Pink, Deep Crimson"
+                      value={flowerForm.colorPalette}
+                      onChange={(e) => setFlowerForm({...flowerForm, colorPalette: e.target.value})}
+                    />
+                  </div>
+
+                  <Select 
+                    label="Art Style"
+                    value={flowerForm.style}
+                    onChange={(e) => setFlowerForm({...flowerForm, style: e.target.value as FlowerStyle})}
+                    options={Object.values(FlowerStyle).map(v => ({ label: v, value: v }))}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-400 shadow-emerald-200" 
+                    isLoading={loading}
+                    disabled={!flowerForm.flowerType}
+                  >
+                    Generate Blooms
+                  </Button>
+                </form>
+              </div>
+             ) : (
+               <FlowerView imageUrl={generatedFlower} onReset={() => setGeneratedFlower(null)} />
+             )}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default App;
