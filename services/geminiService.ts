@@ -1,13 +1,13 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { LetterRequest, FlowerRequest } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 // Models
-const TEXT_MODEL = 'gemini-2.5-flash';
+const TEXT_MODEL = 'gemini-3-flash-preview';
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export const generateLetter = async (request: LetterRequest): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `
     Write a ${request.tone} ${request.occasion} to ${request.recipient}.
     
@@ -39,6 +39,7 @@ export const generateLetter = async (request: LetterRequest): Promise<string> =>
 };
 
 export const generateFlower = async (request: FlowerRequest): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `
     Generate a ${request.style} image of ${request.colorPalette} ${request.flowerType}.
     The image should be high resolution, artistically composed, centered, and visually stunning.

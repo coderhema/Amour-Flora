@@ -7,6 +7,7 @@ import { Button } from './components/Button';
 import { TextInput, TextArea, Select } from './components/Input';
 import { LetterView } from './components/LetterView';
 import { FlowerView } from './components/FlowerView';
+import { BackgroundPatterns } from './components/BackgroundPatterns';
 
 const FLOWER_OPTIONS: FlowerOption[] = [
   { id: 'roses', name: 'Roses', icon: '🌹' },
@@ -120,9 +121,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 selection:bg-rose-200 selection:text-rose-900 pb-20 font-sans">
+    <div className="min-h-screen bg-stone-50/50 selection:bg-rose-200 selection:text-rose-900 pb-20 font-sans relative">
+      <BackgroundPatterns />
+      
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-rose-100">
+      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-rose-100 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={handleReset}>
             <span className="text-3xl transition-transform group-hover:scale-110 duration-300">🌹</span>
@@ -130,29 +133,17 @@ const App: React.FC = () => {
               Amour <span className="text-rose-500">&</span> Flora
             </h1>
           </div>
-
-          {/* Elevated Github Link */}
-          <a 
-            href="https://github.com/coderhema/Amour-Flora" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-stone-200 hover:border-rose-300 hover:bg-rose-50 transition-all duration-300 shadow-sm"
-            aria-label="View on GitHub"
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-stone-600 group-hover:text-rose-600 transition-colors duration-300" fill="currentColor">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.245 3.285-1.245.675 1.65.24 2.88.12 3.18.765.84 1.23 1.92 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-          </a>
+          {/* GitHub link removed per user request */}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 pt-10">
+      <main className="max-w-4xl mx-auto px-6 pt-10 relative z-10">
         
         {/* Tab Navigation */}
         {!isPreviewMode && (
           <div className="flex justify-center mb-12">
-            <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-stone-200 flex gap-1">
+            <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-stone-200 flex gap-1">
               <button
                 onClick={() => setActiveTab(AppTab.LETTERS)}
                 className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -197,7 +188,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Template Selector */}
-                <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm">
+                <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl border border-stone-100 shadow-sm">
                   <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2">
                     {Object.values(LetterCategory).map((cat) => (
                       <button
@@ -218,7 +209,7 @@ const App: React.FC = () => {
                       <button
                         key={template.id}
                         onClick={() => handleTemplateSelect(template.content)}
-                        className="text-left p-3 rounded-lg border border-stone-200 hover:border-rose-300 hover:bg-rose-50 transition-all text-xs md:text-sm"
+                        className="text-left p-3 rounded-lg border border-stone-200 hover:border-rose-300 hover:bg-rose-50 transition-all text-xs md:text-sm bg-white/50"
                       >
                         <span className="font-medium text-stone-700 block mb-1">{template.title}</span>
                         <span className="text-stone-400 text-[10px] line-clamp-2">{template.content}</span>
@@ -228,14 +219,14 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Main Editor */}
-                <div className="bg-white p-1 rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100">
+                <div className="bg-white/95 backdrop-blur-md p-1 rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100">
                   <textarea 
                     className="w-full min-h-[300px] p-6 rounded-xl outline-none resize-y text-lg leading-relaxed text-stone-700 placeholder:text-stone-300 font-serif bg-transparent"
                     placeholder="Your letter will appear here. Start writing or select a template..."
                     value={draftContent}
                     onChange={(e) => setDraftContent(e.target.value)}
                   />
-                  <div className="bg-stone-50 px-4 py-3 rounded-b-xl flex justify-between items-center border-t border-stone-100">
+                  <div className="bg-stone-50/50 px-4 py-3 rounded-b-xl flex justify-between items-center border-t border-stone-100">
                     <span className="text-xs text-stone-400 font-medium uppercase tracking-wider">
                       {draftContent.length} characters
                     </span>
@@ -252,10 +243,10 @@ const App: React.FC = () => {
                 </div>
 
                 {/* AI Assistant Toggle */}
-                <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
+                <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
                   <button 
                     onClick={() => setShowAIForm(!showAIForm)}
-                    className="w-full flex items-center justify-between p-4 bg-stone-50 hover:bg-stone-100 transition-colors"
+                    className="w-full flex items-center justify-between p-4 bg-stone-50/50 hover:bg-stone-100 transition-colors"
                   >
                     <div className="flex items-center gap-2 text-stone-700 font-medium">
                       <span className="text-xl">✨</span>
@@ -272,7 +263,7 @@ const App: React.FC = () => {
                   </button>
                   
                   {showAIForm && (
-                    <div className="p-6 border-t border-stone-100 bg-white animate-fade-in">
+                    <div className="p-6 border-t border-stone-100 bg-white/50 animate-fade-in">
                       <form onSubmit={handleAIGenerate} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <TextInput 
@@ -323,7 +314,7 @@ const App: React.FC = () => {
                   <p className="text-stone-500">Cultivate a unique bloom to accompany your words.</p>
                 </div>
                 
-                <div className="bg-white p-8 rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 space-y-10">
+                <div className="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 space-y-10">
                   
                   {/* Visual Flower Selector */}
                   <div>
@@ -339,7 +330,7 @@ const App: React.FC = () => {
                           className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
                             flowerForm.flowerType === flower.name
                               ? 'bg-emerald-50 border-emerald-300 shadow-md shadow-emerald-100'
-                              : 'bg-white border-stone-200 hover:border-emerald-200 hover:bg-stone-50'
+                              : 'bg-white/50 border-stone-200 hover:border-emerald-200 hover:bg-emerald-50/30'
                           }`}
                         >
                           <span className="text-3xl mb-2">{flower.icon}</span>
@@ -365,7 +356,7 @@ const App: React.FC = () => {
                           className={`group flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
                             flowerForm.colorPalette === color.name
                               ? 'border-stone-800 bg-stone-900 text-white shadow-lg'
-                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                              : 'border-stone-200 bg-white/50 text-stone-600 hover:border-stone-400'
                           }`}
                         >
                           <div className={`w-4 h-4 rounded-full ${color.class}`}></div>
