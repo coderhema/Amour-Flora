@@ -1,11 +1,36 @@
+
 import React, { useState, useEffect } from 'react';
-import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerRequest, LetterCategory } from './types';
+import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerRequest, LetterCategory, FlowerOption, ColorOption } from './types';
 import { generateLetter, generateFlower } from './services/geminiService';
 import { LETTER_TEMPLATES } from './data/templates';
 import { Button } from './components/Button';
 import { TextInput, TextArea, Select } from './components/Input';
 import { LetterView } from './components/LetterView';
 import { FlowerView } from './components/FlowerView';
+
+const FLOWER_OPTIONS: FlowerOption[] = [
+  { id: 'roses', name: 'Roses', icon: '🌹' },
+  { id: 'tulips', name: 'Tulips', icon: '🌷' },
+  { id: 'lilies', name: 'Lilies', icon: '💮' },
+  { id: 'sunflowers', name: 'Sunflowers', icon: '🌻' },
+  { id: 'peonies', name: 'Peonies', icon: '🌸' },
+  { id: 'lavender', name: 'Lavender', icon: '🌿' },
+  { id: 'orchids', name: 'Orchids', icon: '🪴' },
+  { id: 'wildflowers', name: 'Wildflowers', icon: '💐' },
+];
+
+const COLOR_OPTIONS: ColorOption[] = [
+  { id: 'ruby', name: 'Ruby Red', class: 'bg-red-600' },
+  { id: 'blush', name: 'Blush Pink', class: 'bg-rose-300' },
+  { id: 'sunset', name: 'Sunset Orange', class: 'bg-orange-400' },
+  { id: 'sky', name: 'Sky Blue', class: 'bg-sky-400' },
+  { id: 'lavender', name: 'Soft Purple', class: 'bg-purple-300' },
+  { id: 'cream', name: 'Cream White', class: 'bg-stone-100 border border-stone-200' },
+  { id: 'berry', name: 'Berry Mix', class: 'bg-gradient-to-br from-pink-500 to-purple-700', isGradient: true },
+  { id: 'meadow', name: 'Spring Meadow', class: 'bg-gradient-to-br from-emerald-400 to-yellow-300', isGradient: true },
+  { id: 'twilight', name: 'Twilight', class: 'bg-gradient-to-br from-indigo-900 to-pink-500', isGradient: true },
+  { id: 'golden', name: 'Golden Hour', class: 'bg-gradient-to-br from-yellow-500 to-red-500', isGradient: true },
+];
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.LETTERS);
@@ -51,7 +76,7 @@ const App: React.FC = () => {
 
   const handleTemplateSelect = (content: string) => {
     setDraftContent(content);
-    setIsPreviewMode(false); // Ensure we are in edit mode to see it
+    setIsPreviewMode(false);
   };
 
   const handleReset = () => {
@@ -59,7 +84,6 @@ const App: React.FC = () => {
     setDraftContent('');
     setActiveTab(AppTab.LETTERS);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Clear URL without refreshing so user is on a "fresh" page
     window.history.pushState({}, document.title, window.location.pathname);
   };
 
@@ -71,7 +95,7 @@ const App: React.FC = () => {
     try {
       const result = await generateLetter(letterForm);
       setDraftContent(result);
-      setShowAIForm(false); // Collapse AI form after success
+      setShowAIForm(false);
     } catch (error) {
       alert("Failed to generate letter. Please try again.");
     } finally {
@@ -100,23 +124,23 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-rose-100">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={handleReset}>
-            <span className="text-3xl">🌹</span>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={handleReset}>
+            <span className="text-3xl transition-transform group-hover:scale-110 duration-300">🌹</span>
             <h1 className="font-serif text-2xl font-semibold text-stone-800 tracking-tight">
               Amour <span className="text-rose-500">&</span> Flora
             </h1>
           </div>
 
-          {/* Github Link */}
+          {/* Elevated Github Link */}
           <a 
             href="https://github.com/coderhema/Amour-Flora" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-stone-400 hover:text-stone-800 transition-colors p-2 rounded-full hover:bg-stone-100"
+            className="group relative flex items-center justify-center w-10 h-10 rounded-full bg-white border border-stone-200 hover:border-rose-300 hover:bg-rose-50 transition-all duration-300 shadow-sm"
             aria-label="View on GitHub"
           >
-            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.245 3.285-1.245.675 1.65.24 2.88.12 3.18.765.84 1.23 1.92 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-stone-600 group-hover:text-rose-600 transition-colors duration-300" fill="currentColor">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405 1.02 0 2.04.135 3 .405 2.28-1.56 3.285-1.245 3.285-1.245.675 1.65.24 2.88.12 3.18.765.84 1.23 1.92 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
             </svg>
           </a>
         </div>
@@ -125,7 +149,7 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 pt-10">
         
-        {/* Tab Navigation (Hidden in Preview Mode) */}
+        {/* Tab Navigation */}
         {!isPreviewMode && (
           <div className="flex justify-center mb-12">
             <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-stone-200 flex gap-1">
@@ -172,7 +196,7 @@ const App: React.FC = () => {
                   <p className="text-stone-500">Choose a template, write from the heart, or let AI guide you.</p>
                 </div>
 
-                {/* 1. Template Selector */}
+                {/* Template Selector */}
                 <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm">
                   <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2">
                     {Object.values(LetterCategory).map((cat) => (
@@ -203,7 +227,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 2. Main Editor */}
+                {/* Main Editor */}
                 <div className="bg-white p-1 rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100">
                   <textarea 
                     className="w-full min-h-[300px] p-6 rounded-xl outline-none resize-y text-lg leading-relaxed text-stone-700 placeholder:text-stone-300 font-serif bg-transparent"
@@ -227,7 +251,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 3. AI Assistant Toggle */}
+                {/* AI Assistant Toggle */}
                 <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
                   <button 
                     onClick={() => setShowAIForm(!showAIForm)}
@@ -289,52 +313,91 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Flower Generator (Unchanged mostly, just simpler wrapper) */}
+        {/* Visual Flower Generator */}
         {activeTab === AppTab.FLOWERS && (
           <div className="transition-opacity duration-300">
              {!generatedFlower ? (
-               <div className="max-w-2xl mx-auto">
+               <div className="max-w-3xl mx-auto">
                 <div className="text-center mb-10">
-                  <h2 className="font-serif text-4xl text-stone-800 mb-4">Bloom a New Creation</h2>
-                  <p className="text-stone-500">Visualize unique floral arrangements in your favorite style.</p>
+                  <h2 className="font-serif text-4xl text-stone-800 mb-4">Digital Florist</h2>
+                  <p className="text-stone-500">Cultivate a unique bloom to accompany your words.</p>
                 </div>
-
-                <form onSubmit={handleFlowerSubmit} className="space-y-6 bg-white p-8 rounded-3xl shadow-xl shadow-stone-200/40 border border-white">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <TextInput 
-                      label="Flower Type" 
-                      placeholder="e.g. Peonies, Wildflowers"
-                      value={flowerForm.flowerType}
-                      onChange={(e) => setFlowerForm({...flowerForm, flowerType: e.target.value})}
-                      required
-                    />
-                    <TextInput 
-                      label="Color Palette" 
-                      placeholder="e.g. Pastel Pink, Deep Crimson"
-                      value={flowerForm.colorPalette}
-                      onChange={(e) => setFlowerForm({...flowerForm, colorPalette: e.target.value})}
-                    />
+                
+                <div className="bg-white p-8 rounded-2xl shadow-xl shadow-stone-200/50 border border-stone-100 space-y-10">
+                  
+                  {/* Visual Flower Selector */}
+                  <div>
+                    <label className="text-sm font-semibold text-stone-600 mb-4 block uppercase tracking-wider ml-1">
+                      Pick a Variety
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {FLOWER_OPTIONS.map((flower) => (
+                        <button
+                          key={flower.id}
+                          type="button"
+                          onClick={() => setFlowerForm({ ...flowerForm, flowerType: flower.name })}
+                          className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-300 ${
+                            flowerForm.flowerType === flower.name
+                              ? 'bg-emerald-50 border-emerald-300 shadow-md shadow-emerald-100'
+                              : 'bg-white border-stone-200 hover:border-emerald-200 hover:bg-stone-50'
+                          }`}
+                        >
+                          <span className="text-3xl mb-2">{flower.icon}</span>
+                          <span className={`text-sm font-medium ${flowerForm.flowerType === flower.name ? 'text-emerald-700' : 'text-stone-600'}`}>
+                            {flower.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <Select 
-                    label="Art Style"
-                    value={flowerForm.style}
-                    onChange={(e) => setFlowerForm({...flowerForm, style: e.target.value as FlowerStyle})}
-                    options={Object.values(FlowerStyle).map(v => ({ label: v, value: v }))}
-                  />
+                  {/* Color Pills & Mixes */}
+                  <div>
+                    <label className="text-sm font-semibold text-stone-600 mb-4 block uppercase tracking-wider ml-1">
+                      Choose a Palette
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {COLOR_OPTIONS.map((color) => (
+                        <button
+                          key={color.id}
+                          type="button"
+                          onClick={() => setFlowerForm({ ...flowerForm, colorPalette: color.name })}
+                          className={`group flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 ${
+                            flowerForm.colorPalette === color.name
+                              ? 'border-stone-800 bg-stone-900 text-white shadow-lg'
+                              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-400'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full ${color.class}`}></div>
+                          <span className="text-sm font-medium">{color.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-400 shadow-emerald-200" 
-                    isLoading={loading}
-                    disabled={!flowerForm.flowerType}
-                  >
-                    Generate Blooms
-                  </Button>
-                </form>
-              </div>
+                  {/* Artistic Style & Submission */}
+                  <div className="pt-6 border-t border-stone-100 space-y-6">
+                    <Select 
+                      label="Artistic Style"
+                      value={flowerForm.style}
+                      onChange={(e) => setFlowerForm({...flowerForm, style: e.target.value as FlowerStyle})}
+                      options={Object.values(FlowerStyle).map(v => ({ label: v, value: v }))}
+                    />
+                    <Button 
+                      onClick={handleFlowerSubmit} 
+                      className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100" 
+                      isLoading={loading}
+                    >
+                      Bloom My Flower
+                    </Button>
+                  </div>
+                </div>
+               </div>
              ) : (
-               <FlowerView imageUrl={generatedFlower} onReset={() => setGeneratedFlower(null)} />
+               <FlowerView 
+                 imageUrl={generatedFlower} 
+                 onReset={() => setGeneratedFlower(null)} 
+               />
              )}
           </div>
         )}

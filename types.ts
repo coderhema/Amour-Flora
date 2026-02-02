@@ -1,3 +1,4 @@
+
 export enum AppTab {
   LETTERS = 'LETTERS',
   FLOWERS = 'FLOWERS'
@@ -62,4 +63,17 @@ export interface LetterTemplate {
   category: LetterCategory;
   title: string;
   content: string;
+}
+
+export interface FlowerOption {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export interface ColorOption {
+  id: string;
+  name: string;
+  class: string;
+  isGradient?: boolean;
 }
