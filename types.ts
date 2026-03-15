@@ -46,10 +46,29 @@ export interface FlowerRequest {
   style: FlowerStyle;
 }
 
-export interface GeneratedContent {
-  type: 'text' | 'image';
-  content: string; // Text content or Base64 image string
-  timestamp: number;
+// --- DESIGN TYPES ---
+
+export interface LetterDesign {
+  id: string;
+  name: string;
+  paperBg: string;
+  paperTexture: string;
+  textColor: string;
+  borderColor: string;
+  fontFamily: string;
+}
+
+export interface EnvelopeDesign {
+  color: string;
+  flapColor: string;
+  sealColor: string;
+  sealIcon: string;
+  liningPattern?: string;
+}
+
+export interface FullDesign {
+  letter: LetterDesign;
+  envelope: EnvelopeDesign;
 }
 
 export enum LetterCategory {

@@ -20,6 +20,7 @@ export const generateLetter = async (request: LetterRequest): Promise<string> =>
   `;
 
   try {
+    // Correctly using ai.models.generateContent with fresh instance and correct model
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: TEXT_MODEL,
       contents: prompt,
@@ -48,9 +49,10 @@ export const generateFlower = async (request: FlowerRequest): Promise<string> =>
   `;
 
   try {
+    // Correctly using parts array for contents as recommended for nano banana image models
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: IMAGE_MODEL,
-      contents: prompt,
+      contents: { parts: [{ text: prompt }] },
       config: {
         imageConfig: {
           aspectRatio: "1:1",
@@ -58,7 +60,7 @@ export const generateFlower = async (request: FlowerRequest): Promise<string> =>
       }
     });
 
-    // Parse response for image data
+    // Parse response for image data iterating through all parts as required
     if (response.candidates && response.candidates[0].content.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) {

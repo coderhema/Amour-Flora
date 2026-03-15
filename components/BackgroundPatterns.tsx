@@ -1,100 +1,104 @@
 
 import React from 'react';
 
+const PATHS = {
+  CORNER_FILIGREE: "M0 0 C 20 0, 40 20, 40 40 M 10 0 C 30 10, 40 30, 40 50 M 0 10 C 10 30, 30 40, 50 40 M 5 5 L 25 25 M 0 20 C 5 35, 20 45, 35 45",
+  SIDE_VINE: "M0 0 Q 30 100, 0 200 T 0 400 T 0 600",
+  TOP_VINE: "M0 0 Q 100 30, 200 0 T 400 0 T 600 0",
+  CROWN_MOTIF: "M50 20 L 60 40 L 80 45 L 65 60 L 70 80 L 50 70 L 30 80 L 35 60 L 20 45 L 40 40 Z"
+};
+
+const GOLD_COLOR = 'text-[#d4af37]'; // Imperial Gold
+
+interface OrnamentProps {
+  path: string;
+  transform?: string;
+  duration?: number;
+  delay?: number;
+}
+
+const Ornament: React.FC<OrnamentProps> = ({ path, transform, duration = 4, delay = 0 }) => (
+  <g transform={transform}>
+    <path
+      d={path}
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      fill="none"
+      className={`${GOLD_COLOR} opacity-0`}
+      style={{
+        strokeDasharray: 3000,
+        strokeDashoffset: 3000,
+        animation: `
+          drawStroke ${duration}s cubic-bezier(0.35, 0, 0.25, 1) ${delay}s forwards,
+          fadeIn 0.8s ease-out ${delay}s forwards,
+          breathe 6s ease-in-out ${delay + duration}s infinite alternate
+        `
+      }}
+    />
+  </g>
+);
+
 export const BackgroundPatterns: React.FC = () => {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-      <svg className="w-full h-full opacity-[0.18]" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#fdfaf6]">
+      <svg 
+        className="w-full h-full opacity-[0.25]" 
+        viewBox="0 0 1000 1000" 
+        preserveAspectRatio="xMidYMid slice" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes growPath {
-            from { stroke-dashoffset: 2000; }
+          @keyframes drawStroke {
             to { stroke-dashoffset: 0; }
           }
-          @keyframes gentleSway {
-            0%, 100% { transform: rotate(0deg) translateX(0); }
-            50% { transform: rotate(1deg) translateX(5px); }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
-          .animate-grow {
-            stroke-dasharray: 2000;
-            stroke-dashoffset: 2000;
-            animation: growPath 12s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-          }
-          .sway {
-            animation: gentleSway 20s ease-in-out infinite;
+          @keyframes breathe {
+            from { opacity: 1; }
+            to { opacity: 0.6; }
           }
         `}} />
 
-        {/* --- RIGHT SIDE GROWTH --- */}
-        <g className="sway" style={{ transformOrigin: 'right center' }}>
-          {/* Main Climbing Vine - Right */}
-          <path 
-            className="animate-grow text-sage-300" 
-            d="M1020 200 C 950 250, 920 150, 850 300 S 800 500, 750 450 S 700 600, 650 550 S 600 700, 680 800" 
-            stroke="currentColor" 
-            strokeWidth="1.2" 
-            strokeLinecap="round" 
-          />
-          
-          {/* Blooming Rose - Top Right */}
-          <path 
-            className="animate-grow text-rose-300" 
-            d="M850 300 C 870 280, 900 280, 910 310 S 880 350, 850 340 S 820 310, 850 300 M 850 300 C 840 270, 870 240, 900 250 S 930 300, 910 330 M 850 300 C 820 280, 800 320, 830 350 S 880 370, 910 340" 
-            stroke="currentColor" 
-            strokeWidth="1.5" 
-            style={{ animationDelay: '2s' }}
-          />
+        {/* Fixed Corner Ornaments - Quick, crisp entry */}
+        <Ornament path={PATHS.CORNER_FILIGREE} transform="translate(50, 50) scale(2.5)" duration={3} delay={0.2} />
+        <Ornament path={PATHS.CORNER_FILIGREE} transform="translate(950, 50) scale(2.5) rotate(90)" duration={3} delay={0.4} />
+        <Ornament path={PATHS.CORNER_FILIGREE} transform="translate(50, 950) scale(2.5) rotate(-90)" duration={3} delay={0.6} />
+        <Ornament path={PATHS.CORNER_FILIGREE} transform="translate(950, 950) scale(2.5) rotate(180)" duration={3} delay={0.8} />
 
-          {/* Leaves - Right Side */}
-          <path className="animate-grow text-sage-200" d="M920 150 Q 900 130, 880 150 T 900 170 Z" stroke="currentColor" fill="currentColor" fillOpacity="0.05" style={{ animationDelay: '1s' }} />
-          <path className="animate-grow text-sage-200" d="M780 480 Q 760 460, 740 480 T 760 500 Z" stroke="currentColor" fill="currentColor" fillOpacity="0.05" style={{ animationDelay: '4s' }} />
-        </g>
-
-        {/* --- LEFT SIDE GROWTH --- */}
-        <g className="sway" style={{ transformOrigin: 'left center', animationDelay: '-10s' }}>
-          {/* Main Vine - Left */}
-          <path 
-            className="animate-grow text-sage-300" 
-            d="M-20 700 C 50 650, 80 750, 150 600 S 200 400, 250 450 S 300 300, 350 350 S 400 200, 320 100" 
-            stroke="currentColor" 
-            strokeWidth="1.2" 
-            strokeLinecap="round" 
-            style={{ animationDelay: '1.5s' }}
-          />
-
-          {/* Lily Bloom - Center Left */}
-          <path 
-            className="animate-grow text-rose-200" 
-            d="M150 600 Q 130 570, 150 540 Q 170 570, 150 600 M 150 600 Q 180 580, 210 600 Q 180 620, 150 600 M 150 600 Q 130 630, 150 660 Q 170 630, 150 600 M 150 600 Q 120 580, 90 600 Q 120 620, 150 600" 
-            stroke="currentColor" 
-            strokeWidth="1.5" 
-            style={{ animationDelay: '3.5s' }}
-          />
-
-          {/* Heart Vines - Bottom Left */}
-          <path 
-            className="animate-grow text-rose-100" 
-            d="M50 850 C 70 830, 100 830, 100 850 S 70 890, 50 900 S 0 890, 0 850 S 30 830, 50 850" 
-            stroke="currentColor" 
-            strokeWidth="1" 
-            style={{ animationDelay: '5s' }}
-          />
-        </g>
-
-        {/* --- ACCENT STROKES --- */}
-        {/* Floating Petals */}
-        <path className="animate-grow text-rose-100" d="M400 100 Q 410 110, 400 120 Q 390 110, 400 100" stroke="currentColor" style={{ animationDelay: '8s' }} />
-        <path className="animate-grow text-rose-100" d="M600 850 Q 610 860, 600 870 Q 590 860, 600 850" stroke="currentColor" style={{ animationDelay: '9s' }} />
+        {/* Side Borders - Slower, elegant draw */}
+        <Ornament path={PATHS.SIDE_VINE} transform="translate(30, 300) scale(1, 1)" duration={8} delay={1.5} />
+        <Ornament path={PATHS.SIDE_VINE} transform="translate(970, 300) scale(-1, 1)" duration={8} delay={1.7} />
         
-        {/* Subtle Horizontal Connectors */}
-        <path 
-          className="animate-grow text-sage-100" 
-          d="M350 350 Q 500 400, 650 350" 
-          stroke="currentColor" 
-          strokeWidth="0.5" 
-          strokeDasharray="4 8"
-          style={{ animationDelay: '6s' }}
-        />
+        {/* Top and Bottom Borders - Longest draw */}
+        <Ornament path={PATHS.TOP_VINE} transform="translate(300, 30)" duration={10} delay={2.0} />
+        <Ornament path={PATHS.TOP_VINE} transform="translate(300, 970) scale(1, -1)" duration={10} delay={2.3} />
+
+        {/* Subtle Background Pattern (Damask style repetition) - Late entry */}
+        {[...Array(5)].map((_, i) => (
+          <React.Fragment key={i}>
+            <Ornament 
+              path={PATHS.CROWN_MOTIF} 
+              transform={`translate(${150 + i * 175}, 150) scale(0.5)`} 
+              duration={6} 
+              delay={3 + i * 0.3} 
+            />
+            <Ornament 
+              path={PATHS.CROWN_MOTIF} 
+              transform={`translate(${150 + i * 175}, 850) scale(0.5)`} 
+              duration={6} 
+              delay={3.5 + i * 0.3} 
+            />
+          </React.Fragment>
+        ))}
       </svg>
+      
+      {/* Texture & Lighting Overlays */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] opacity-[0.04] pointer-events-none mix-blend-multiply"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-stone-200/20 pointer-events-none"></div>
     </div>
   );
 };
