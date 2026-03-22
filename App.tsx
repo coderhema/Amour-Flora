@@ -3,30 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerRequest, LetterCategory, FlowerOption, ColorOption, FullDesign } from './types';
 import { generateLetter, generateFlower } from './services/geminiService';
 import { LETTER_TEMPLATES } from './data/templates';
+import { DESIGNS } from './data/designs';
 import { Button } from './components/Button';
 import { TextInput, TextArea, Select } from './components/Input';
 import { LetterView } from './components/LetterView';
 import { FlowerView } from './components/FlowerView';
-import { BackgroundPatterns } from './components/BackgroundPatterns';
 import { DesignSelector } from './components/DesignSelector';
+import { BackgroundPatterns } from './components/BackgroundPatterns';
 
-const DEFAULT_DESIGN: FullDesign = {
-  letter: {
-    id: 'royal-cream',
-    name: 'Royal Ivory & Gold',
-    paperBg: 'bg-[#fcfbf4]',
-    paperTexture: 'opacity-40',
-    textColor: 'text-stone-800',
-    borderColor: 'border-[#d4af37]',
-    fontFamily: 'font-serif'
-  },
-  envelope: {
-    color: 'bg-[#6d0000]',
-    flapColor: 'bg-[#7d0000]',
-    sealColor: 'bg-[#8b0000]',
-    sealIcon: '⚜️'
-  }
-};
 
 const FLOWER_OPTIONS: FlowerOption[] = [
   { id: 'roses', name: 'Roses', icon: '🌹' },
@@ -60,15 +44,17 @@ const App: React.FC = () => {
   // States
   const [draftContent, setDraftContent] = useState<string>('');
   const [generatedFlower, setGeneratedFlower] = useState<string | null>(null);
-  const [letterDesign, setLetterDesign] = useState<FullDesign>(DEFAULT_DESIGN);
+  const [letterDesign, setLetterDesign] = useState<FullDesign>(DESIGNS[0]);
 
   // AI Form States
   const [showAIForm, setShowAIForm] = useState(false);
   const [letterForm, setLetterForm] = useState<LetterRequest>({
     recipient: '',
+    relationship: '',
     occasion: LetterOccasion.LOVE,
     tone: LetterTone.ROMANTIC,
-    details: ''
+    details: '',
+    memories: ''
   });
 
   const [flowerForm, setFlowerForm] = useState<FlowerRequest>({
@@ -102,7 +88,6 @@ const App: React.FC = () => {
   const handleReset = () => {
     setViewState('draft');
     setDraftContent('');
-    setLetterDesign(DEFAULT_DESIGN);
     setActiveTab(AppTab.LETTERS);
     setGeneratedFlower(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -111,7 +96,7 @@ const App: React.FC = () => {
 
   const handleAIGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!letterForm.recipient || !letterForm.details) return;
+    if (!letterForm.recipient) return;
     
     setLoading(true);
     try {
@@ -198,13 +183,10 @@ const App: React.FC = () => {
               />
             ) : viewState === 'design' ? (
               <DesignSelector 
-                design={letterDesign}
-                setDesign={setLetterDesign}
+                selectedDesign={letterDesign}
+                onSelect={setLetterDesign}
+                onConfirm={() => setViewState('final')}
                 onBack={() => setViewState('draft')}
-                onConfirm={() => {
-                  setViewState('final');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
               />
             ) : (
               <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
@@ -262,7 +244,7 @@ const App: React.FC = () => {
                       disabled={!draftContent.trim()}
                       className="px-10"
                     >
-                      Design & Seal
+                      Choose Design
                     </Button>
                   </div>
                 </div>
@@ -291,22 +273,36 @@ const App: React.FC = () => {
                             value={letterForm.recipient}
                             onChange={(e) => setLetterForm({...letterForm, recipient: e.target.value})}
                           />
+                          <TextInput 
+                            label="Relationship" 
+                            placeholder="e.g. Partner, Mother, Best Friend"
+                            value={letterForm.relationship}
+                            onChange={(e) => setLetterForm({...letterForm, relationship: e.target.value})}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <Select 
                             label="Occasion"
                             value={letterForm.occasion}
                             onChange={(e) => setLetterForm({...letterForm, occasion: e.target.value as LetterOccasion})}
                             options={Object.values(LetterOccasion).map(v => ({ label: v, value: v }))}
                           />
+                          <Select 
+                            label="Tone of Voice"
+                            value={letterForm.tone}
+                            onChange={(e) => setLetterForm({...letterForm, tone: e.target.value as LetterTone})}
+                            options={Object.values(LetterTone).map(v => ({ label: v, value: v }))}
+                          />
                         </div>
-                        <Select 
-                          label="Tone of Voice"
-                          value={letterForm.tone}
-                          onChange={(e) => setLetterForm({...letterForm, tone: e.target.value as LetterTone})}
-                          options={Object.values(LetterTone).map(v => ({ label: v, value: v }))}
+                        <TextArea 
+                          label="Shared Memories or Characteristics"
+                          placeholder="What specific things should the letter mention? (e.g. that trip to Paris, their laugh, how they always make tea...)"
+                          value={letterForm.memories}
+                          onChange={(e) => setLetterForm({...letterForm, memories: e.target.value})}
                         />
                         <TextArea 
-                          label="Key Memories or Details"
-                          placeholder="What specific things should the letter mention?"
+                          label="Additional Details (Optional)"
+                          placeholder="Any other specific requests for the letter?"
                           value={letterForm.details}
                           onChange={(e) => setLetterForm({...letterForm, details: e.target.value})}
                         />
@@ -371,6 +367,23 @@ const App: React.FC = () => {
                   </div>
 
                   <div className="pt-8 border-t border-stone-100 space-y-8">
+                    <div className="space-y-4">
+                      <label className="text-xs font-bold text-stone-400 block uppercase tracking-[0.3em] ml-1">Or Use a Custom Photo Link</label>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text"
+                          placeholder="Paste a Google Photos or image link here..."
+                          className="flex-grow px-6 py-4 rounded-xl border-2 border-stone-100 focus:border-emerald-300 outline-none transition-all text-stone-700 bg-white/50"
+                          onChange={(e) => {
+                            if (e.target.value.trim()) {
+                              setGeneratedFlower(e.target.value.trim());
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-stone-400 italic ml-1">Note: Ensure the link is a direct image URL for best results.</p>
+                    </div>
+
                     <Select 
                       label="Artistic Rendition Style"
                       value={flowerForm.style}
@@ -385,7 +398,17 @@ const App: React.FC = () => {
                </div>
              ) : (
                <div className="max-w-xl mx-auto space-y-8">
-                 <FlowerView imageUrl={generatedFlower} onReset={() => setGeneratedFlower(null)} />
+                 <FlowerView 
+                  imageUrl={generatedFlower} 
+                  onReset={() => setGeneratedFlower(null)} 
+                  onAddToLetter={() => {
+                    setActiveTab(AppTab.LETTERS);
+                    if (draftContent.trim()) {
+                      setViewState('final');
+                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
                  <div className="text-center bg-stone-900/5 p-4 rounded-2xl italic text-stone-500 text-sm">
                    This flower will now be used as the postage stamp on your letters.
                  </div>

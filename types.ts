@@ -35,9 +35,11 @@ export enum FlowerStyle {
 
 export interface LetterRequest {
   recipient: string;
+  relationship: string;
   occasion: LetterOccasion;
   tone: LetterTone;
   details: string;
+  memories: string;
 }
 
 export interface FlowerRequest {
@@ -59,6 +61,8 @@ export interface LetterDesign {
 }
 
 export interface EnvelopeDesign {
+  id: string;
+  name: string;
   color: string;
   flapColor: string;
   sealColor: string;
@@ -67,6 +71,8 @@ export interface EnvelopeDesign {
 }
 
 export interface FullDesign {
+  id: string;
+  name: string;
   letter: LetterDesign;
   envelope: EnvelopeDesign;
 }

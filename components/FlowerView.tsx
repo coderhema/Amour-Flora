@@ -4,9 +4,10 @@ import { Button } from './Button';
 interface FlowerViewProps {
   imageUrl: string | null;
   onReset: () => void;
+  onAddToLetter?: () => void;
 }
 
-export const FlowerView: React.FC<FlowerViewProps> = ({ imageUrl, onReset }) => {
+export const FlowerView: React.FC<FlowerViewProps> = ({ imageUrl, onReset, onAddToLetter }) => {
   if (!imageUrl) return null;
 
   const handleDownload = () => {
@@ -30,13 +31,18 @@ export const FlowerView: React.FC<FlowerViewProps> = ({ imageUrl, onReset }) => 
         </div>
       </div>
       
-      <div className="flex gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
         <Button variant="secondary" onClick={onReset}>
           Create Another
         </Button>
-        <Button onClick={handleDownload}>
+        <Button onClick={handleDownload} variant="secondary">
           Download Image
         </Button>
+        {onAddToLetter && (
+          <Button onClick={onAddToLetter} className="bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200">
+            Add to Letter
+          </Button>
+        )}
       </div>
     </div>
   );

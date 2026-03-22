@@ -11,7 +11,12 @@ export const generateLetter = async (request: LetterRequest): Promise<string> =>
   const prompt = `
     Write a ${request.tone} ${request.occasion} to ${request.recipient}.
     
-    Specific details to include:
+    Relationship to recipient: ${request.relationship}
+    
+    Specific memories or characteristics to weave in:
+    ${request.memories}
+    
+    Other details to include:
     ${request.details}
     
     Ensure the formatting is elegant. If it is a poem, format it with stanzas. 
