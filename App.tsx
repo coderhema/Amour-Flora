@@ -306,7 +306,6 @@ const App: React.FC = () => {
                 onEdit={() => setViewState('design')}
                 onReset={handleReset}
               />
-            ) : viewState === 'dispatch' ? (
             ) : viewState === 'design' ? (
               <DesignSelector 
                 selectedDesign={letterDesign}
