@@ -1,4 +1,4 @@
-
+successfully downloaded text file (SHA: 50809a2467992638975405fc054dc85dfe52d1d8)"},{"type":"resource","resource":{"uri":"repo://coderhema/Amour-Flora/sha/5c72a1e4a2f52f950019dedc74ee2572c7f5dcbb/contents/App.tsx","mimeType":"text/plain; charset=utf-8","text":"
 import React, { useState, useEffect } from 'react';
 import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerRequest, LetterCategory, FlowerOption, ColorOption, FullDesign } from './types';
 import { generateLetter, generateFlower } from './services/geminiService';
@@ -8,6 +8,7 @@ import { auth, db, googleProvider, signInWithPopup, onAuthStateChanged, collecti
 import { Button } from './components/Button';
 import { TextInput, TextArea, Select } from './components/Input';
 import { LetterView } from './components/LetterView';
+import { DispatchView } from './components/DispatchView';
 import { FlowerView } from './components/FlowerView';
 import { DesignSelector } from './components/DesignSelector';
 import { DesignCustomizer } from './components/DesignCustomizer';
@@ -16,14 +17,14 @@ import { BackgroundPatterns } from './components/BackgroundPatterns';
 
 
 const FLOWER_OPTIONS: FlowerOption[] = [
-  { id: 'roses', name: 'Roses', icon: '🌹' },
-  { id: 'tulips', name: 'Tulips', icon: '🌷' },
-  { id: 'lilies', name: 'Lilies', icon: '💮' },
-  { id: 'sunflowers', name: 'Sunflowers', icon: '🌻' },
-  { id: 'peonies', name: 'Peonies', icon: '🌸' },
-  { id: 'lavender', name: 'Lavender', icon: '🌿' },
-  { id: 'orchids', name: 'Orchids', icon: '🪴' },
-  { id: 'wildflowers', name: 'Wildflowers', icon: '💐' },
+  { id: 'roses', name: 'Roses', icon: 'ð¹' },
+  { id: 'tulips', name: 'Tulips', icon: 'ð·' },
+  { id: 'lilies', name: 'Lilies', icon: 'ð®' },
+  { id: 'sunflowers', name: 'Sunflowers', icon: 'ð»' },
+  { id: 'peonies', name: 'Peonies', icon: 'ð¸' },
+  { id: 'lavender', name: 'Lavender', icon: 'ð¿' },
+  { id: 'orchids', name: 'Orchids', icon: 'ðª´' },
+  { id: 'wildflowers', name: 'Wildflowers', icon: 'ð' },
 ];
 
 const COLOR_OPTIONS: ColorOption[] = [
@@ -42,7 +43,7 @@ const COLOR_OPTIONS: ColorOption[] = [
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.LETTERS);
   const [loading, setLoading] = useState(false);
-  const [viewState, setViewState] = useState<'draft' | 'design' | 'customise' | 'final'>('draft');
+  const [viewState, setViewState] = useState<'draft' | 'design' | 'customise' | 'final' | 'dispatch'>('draft');
   const [user, setUser] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
@@ -239,7 +240,7 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-rose-100 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={handleReset}>
-            <span className="text-3xl transition-transform group-hover:scale-110 duration-300">🌹</span>
+            <span className="text-3xl transition-transform group-hover:scale-110 duration-300">ð¹</span>
             <h1 className="font-serif text-2xl font-semibold text-stone-800 tracking-tight">
               Amour <span className="text-rose-500">&</span> Flora
             </h1>
@@ -294,6 +295,17 @@ const App: React.FC = () => {
                 onEdit={() => setViewState('design')} 
                 onReset={handleReset}
                 onShare={handleShare}
+                onDispatch={() => setViewState('dispatch')}
+              />
+            ) : viewState === 'dispatch' ? (
+              <DispatchView
+                content={draftContent}
+                design={letterDesign}
+                stampImage={generatedFlower}
+                recipientName={letterForm.recipient}
+                onShare={handleShare}
+                onEdit={() => setViewState('design')}
+                onReset={handleReset}
               />
             ) : viewState === 'design' ? (
               <DesignSelector 
@@ -377,7 +389,7 @@ const App: React.FC = () => {
                     className="w-full flex items-center justify-between p-5 bg-stone-50/50 hover:bg-stone-100 transition-colors"
                   >
                     <div className="flex items-center gap-3 text-stone-700 font-medium">
-                      <span className="text-2xl">✨</span>
+                      <span className="text-2xl">â¨</span>
                       <span>Need help writing? Use AI Assistant</span>
                     </div>
                     <svg className={`w-5 h-5 text-stone-400 transition-transform ${showAIForm ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
