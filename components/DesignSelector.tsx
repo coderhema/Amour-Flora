@@ -7,13 +7,15 @@ interface DesignSelectorProps {
   onSelect: (design: FullDesign) => void;
   onConfirm: () => void;
   onBack: () => void;
+  onCustomise: () => void;
 }
 
 export const DesignSelector: React.FC<DesignSelectorProps> = ({ 
   selectedDesign, 
   onSelect, 
   onConfirm,
-  onBack
+  onBack,
+  onCustomise
 }) => {
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
@@ -38,10 +40,17 @@ export const DesignSelector: React.FC<DesignSelectorProps> = ({
               {/* Envelope Preview */}
               <div className={`absolute inset-0 flex items-center justify-center p-4`}>
                 <div className={`w-full h-full ${design.envelope.color} rounded-lg shadow-lg relative overflow-hidden`}>
+                   {/* Letter Peek */}
+                   <div className={`absolute inset-1 ${design.letter.paperBg} rounded-sm shadow-inner transition-transform duration-500 group-hover:-translate-y-4`}>
+                      <div className={`absolute inset-0 ${design.letter.paperTexture} mix-blend-multiply opacity-30`}></div>
+                   </div>
                    {/* Flap */}
-                   <div className={`absolute top-0 left-0 right-0 h-1/2 ${design.envelope.flapColor} rounded-b-[40%] origin-top transition-transform duration-500 group-hover:rotate-x-180`}></div>
+                   <div 
+                     className={`absolute top-0 left-0 right-0 h-2/3 ${design.envelope.flapColor} origin-top transition-transform duration-500 group-hover:rotate-x-180 z-20`}
+                     style={{ clipPath: 'polygon(0 0, 100% 0, 100% 20%, 50% 100%, 0 20%)' }}
+                   ></div>
                    {/* Seal */}
-                   <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 ${design.envelope.sealColor} rounded-full shadow-md flex items-center justify-center text-xl z-10`}>
+                   <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 ${design.envelope.sealColor} rounded-full shadow-md flex items-center justify-center text-xl z-30 transition-opacity duration-300 group-hover:opacity-0`}>
                      {design.envelope.sealIcon}
                    </div>
                 </div>
@@ -72,6 +81,12 @@ export const DesignSelector: React.FC<DesignSelectorProps> = ({
           className="px-8 py-4 rounded-xl border-2 border-stone-200 text-stone-600 font-bold hover:bg-stone-50 transition-all"
         >
           Back to Draft
+        </button>
+        <button 
+          onClick={onCustomise}
+          className="px-8 py-4 rounded-xl border-2 border-rose-200 text-rose-600 font-bold hover:bg-rose-50 transition-all"
+        >
+          Customise Details
         </button>
         <button 
           onClick={onConfirm}

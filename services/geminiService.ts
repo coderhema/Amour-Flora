@@ -3,10 +3,11 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { LetterRequest, FlowerRequest } from '../types';
 
 // Models
-const TEXT_MODEL = 'gemini-2.0-flash';
+const TEXT_MODEL = 'gemini-3-flash-preview';
+const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export const generateLetter = async (request: LetterRequest): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const prompt = `
     Write a ${request.tone} ${request.occasion} to ${request.recipient}.
     
@@ -24,6 +25,7 @@ export const generateLetter = async (request: LetterRequest): Promise<string> =>
   `;
 
   try {
+    // Correctly using ai.models.generateContent with fresh instance and correct model
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: TEXT_MODEL,
       contents: prompt,
@@ -43,20 +45,38 @@ export const generateLetter = async (request: LetterRequest): Promise<string> =>
 };
 
 export const generateFlower = async (request: FlowerRequest): Promise<string> => {
-  // Use Pollinations.ai — completely free, no API key required
-  const prompt = encodeURIComponent(
-    `${request.style} image of ${request.colorPalette} ${request.flowerType}, high resolution, artistically composed, centered, visually stunning, intricate petal details, beautiful lighting`
-  );
-  const width = 512;
-  const height = 512;
-  const seed = Math.floor(Math.random() * 1000000);
-  const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const prompt = `
+    Generate a ${request.style} image of ${request.colorPalette} ${request.flowerType}.
+    The image should be high resolution, artistically composed, centered, and visually stunning.
+    Focus on the intricate details of the petals and lighting.
+    Aspect ratio 1:1.
+  `;
 
   try {
-    // Verify the image is reachable
-    const res = await fetch(imageUrl);
-    if (!res.ok) throw new Error(`Pollinations request failed: ${res.status}`);
-    return imageUrl;
+    // Correctly using parts array for contents as recommended for nano banana image models
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: IMAGE_MODEL,
+      contents: { parts: [{ text: prompt }] },
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1",
+        }
+      }
+    });
+
+    // Parse response for image data iterating through all parts as required
+    if (response.candidates && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          const base64Data = part.inlineData.data;
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${base64Data}`;
+        }
+      }
+    }
+    
+    throw new Error("No image generated.");
   } catch (error) {
     console.error("Flower generation failed:", error);
     throw error;

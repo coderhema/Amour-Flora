@@ -129,11 +129,14 @@ export const Envelope: React.FC<EnvelopeProps> = ({
         <div 
           className={`absolute top-0 left-0 w-full h-[65%] origin-top transition-all duration-[1200ms] ease-[cubic-bezier(0.8,0,0.2,1)] z-40
             ${isOpened ? 'rotate-x-180 z-15' : 'rotate-x-0'}`}
-          style={{ clipPath: 'polygon(0 0, 100% 0, 50% 100%)' }}
+          style={{ clipPath: 'polygon(0 0, 100% 0, 100% 20%, 50% 100%, 0 20%)' }}
         >
           <div className={`absolute inset-0 ${design.flapColor} shadow-2xl`}>
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-black/20"></div>
             <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]"></div>
+            
+            {/* Decorative Border on Flap */}
+            <div className="absolute inset-2 border border-white/10" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 20%, 50% 100%, 0 20%)' }}></div>
             
             {/* Wax Seal */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2">

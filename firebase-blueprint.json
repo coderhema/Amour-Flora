@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "Letter": {
+      "title": "Letter",
+      "description": "A stored letter with its design and flower stamp.",
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The text content of the letter."
+        },
+        "design": {
+          "type": "object",
+          "description": "The full design configuration for the letter and envelope."
+        },
+        "flower": {
+          "type": "string",
+          "description": "Base64 encoded image of the flower stamp."
+        },
+        "recipient": {
+          "type": "string",
+          "description": "The name of the recipient."
+        },
+        "uid": {
+          "type": "string",
+          "description": "The UID of the user who created the letter."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the letter was created."
+        }
+      },
+      "required": ["content", "design", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/letters/{letterId}": {
+      "schema": "Letter",
+      "description": "Collection of shared letters."
+    }
+  }
+}

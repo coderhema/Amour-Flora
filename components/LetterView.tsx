@@ -8,6 +8,7 @@ interface LetterViewProps {
   content: string | null;
   onEdit: () => void;
   onReset: () => void;
+  onShare: () => void;
   design: FullDesign;
   stampImage?: string | null;
   recipientName?: string;
@@ -44,7 +45,7 @@ const useHandwriting = (text: string, isReading: boolean) => {
   return { displayedText, isComplete };
 };
 
-export const LetterView: React.FC<LetterViewProps> = ({ content, onEdit, onReset, design, stampImage, recipientName }) => {
+export const LetterView: React.FC<LetterViewProps> = ({ content, onEdit, onReset, onShare, design, stampImage, recipientName }) => {
   const [stage, setStage] = useState<'closed' | 'opening' | 'reading'>('closed');
   const { displayedText, isComplete } = useHandwriting(content || '', stage === 'reading');
 
@@ -55,22 +56,6 @@ export const LetterView: React.FC<LetterViewProps> = ({ content, onEdit, onReset
     setTimeout(() => {
       setStage('reading');
     }, 1600);
-  };
-
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?note=${encodeURIComponent(content)}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'A Royal Letter for You',
-          text: 'You have been sent a custom imperial sentiment...',
-          url: shareUrl,
-        });
-      } catch (err) { console.log(err); }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
-    }
   };
 
   return (
@@ -95,14 +80,17 @@ export const LetterView: React.FC<LetterViewProps> = ({ content, onEdit, onReset
         className={`w-full max-w-4xl transition-all duration-[1200ms] transform px-4 md:px-0
         ${stage === 'reading' ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-40 scale-95 pointer-events-none'}`}
       >
-        <div className={`relative ${design.letter.paperBg} ${design.letter.borderColor} border-[8px] md:border-[16px] p-8 md:p-24 shadow-[0_50px_100px_rgba(0,0,0,0.3)] md:shadow-[0_100px_200px_rgba(0,0,0,0.4)] mb-12 flex flex-col min-h-[600px] md:min-h-[900px] overflow-hidden rounded-sm`}>
+        <div className={`relative ${design.letter.paperBg} ${design.letter.borderColor} border-[8px] md:border-[16px] p-8 md:p-24 shadow-[0_50px_100px_rgba(0,0,0,0.3)] md:shadow-[0_100px_200px_rgba(0,0,0,0.4)] mb-12 flex flex-col min-h-[600px] md:min-h-[900px] overflow-hidden`}>
           
-          {/* Deckled Edge Effect (Using a mask or a pseudo-element with rough edges) */}
-          <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_15px_rgba(0,0,0,0.1)]"></div>
+          {/* Deckled Edge Effect (Using a more complex clip-path for a truly rough look) */}
+          <div className="absolute inset-0 pointer-events-none z-20" style={{ 
+            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.05)',
+            clipPath: 'polygon(0% 0.5%, 1% 0%, 2% 0.5%, 3% 0%, 4% 0.5%, 5% 0%, 6% 0.5%, 7% 0%, 8% 0.5%, 9% 0%, 10% 0.5%, 11% 0%, 12% 0.5%, 13% 0%, 14% 0.5%, 15% 0%, 16% 0.5%, 17% 0%, 18% 0.5%, 19% 0%, 20% 0.5%, 21% 0%, 22% 0.5%, 23% 0%, 24% 0.5%, 25% 0%, 26% 0.5%, 27% 0%, 28% 0.5%, 29% 0%, 30% 0.5%, 31% 0%, 32% 0.5%, 33% 0%, 34% 0.5%, 35% 0%, 36% 0.5%, 37% 0%, 38% 0.5%, 39% 0%, 40% 0.5%, 41% 0%, 42% 0.5%, 43% 0%, 44% 0.5%, 45% 0%, 46% 0.5%, 47% 0%, 48% 0.5%, 49% 0%, 50% 0.5%, 51% 0%, 52% 0.5%, 53% 0%, 54% 0.5%, 55% 0%, 56% 0.5%, 57% 0%, 58% 0.5%, 59% 0%, 60% 0.5%, 61% 0%, 62% 0.5%, 63% 0%, 64% 0.5%, 65% 0%, 66% 0.5%, 67% 0%, 68% 0.5%, 69% 0%, 70% 0.5%, 71% 0%, 72% 0.5%, 73% 0%, 74% 0.5%, 75% 0%, 76% 0.5%, 77% 0%, 78% 0.5%, 79% 0%, 80% 0.5%, 81% 0%, 82% 0.5%, 83% 0%, 84% 0.5%, 85% 0%, 86% 0.5%, 87% 0%, 88% 0.5%, 89% 0%, 90% 0.5%, 91% 0%, 92% 0.5%, 93% 0%, 94% 0.5%, 95% 0%, 96% 0.5%, 97% 0%, 98% 0.5%, 99% 0%, 100% 0.5%, 100% 100%, 0% 100%)'
+          }}></div>
           
           {/* Paper Texture Overlay */}
-          <div className={`absolute inset-0 pointer-events-none ${design.letter.paperTexture} mix-blend-multiply opacity-40`}></div>
-          <div className="absolute inset-0 pointer-events-none opacity-15 bg-[url('https://www.transparenttextures.com/patterns/handmade-paper.png')]"></div>
+          <div className={`absolute inset-0 pointer-events-none ${design.letter.paperTexture} mix-blend-multiply`}></div>
+          <div className="absolute inset-0 pointer-events-none opacity-10 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] mix-blend-multiply"></div>
           
           {/* Realistic Paper Edge (Roughness) */}
           <div className="absolute inset-0 pointer-events-none" style={{ 
@@ -154,7 +142,7 @@ export const LetterView: React.FC<LetterViewProps> = ({ content, onEdit, onReset
           <Button variant="secondary" onClick={onEdit} className="rounded-full px-10 border-stone-200 shadow-xl bg-white">
             Modify Design
           </Button>
-          <Button onClick={handleShare} className="rounded-full px-10 bg-stone-900 text-white shadow-2xl hover:bg-black">
+          <Button onClick={onShare} className="rounded-full px-10 bg-stone-900 text-white shadow-2xl hover:bg-black">
             Seal & Dispatch
           </Button>
           <Button variant="ghost" onClick={onReset} className="text-stone-400 hover:text-stone-600">

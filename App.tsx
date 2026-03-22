@@ -4,11 +4,14 @@ import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerR
 import { generateLetter, generateFlower } from './services/geminiService';
 import { LETTER_TEMPLATES } from './data/templates';
 import { DESIGNS } from './data/designs';
+import { auth, db, googleProvider, signInWithPopup, onAuthStateChanged, collection, addDoc, doc, getDoc, serverTimestamp, handleFirestoreError, OperationType } from './firebase';
 import { Button } from './components/Button';
 import { TextInput, TextArea, Select } from './components/Input';
 import { LetterView } from './components/LetterView';
 import { FlowerView } from './components/FlowerView';
 import { DesignSelector } from './components/DesignSelector';
+import { DesignCustomizer } from './components/DesignCustomizer';
+import { ShareModal } from './components/ShareModal';
 import { BackgroundPatterns } from './components/BackgroundPatterns';
 
 
@@ -39,12 +42,15 @@ const COLOR_OPTIONS: ColorOption[] = [
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.LETTERS);
   const [loading, setLoading] = useState(false);
-  const [viewState, setViewState] = useState<'draft' | 'design' | 'final'>('draft');
+  const [viewState, setViewState] = useState<'draft' | 'design' | 'customise' | 'final'>('draft');
+  const [user, setUser] = useState<any>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // States
   const [draftContent, setDraftContent] = useState<string>('');
   const [generatedFlower, setGeneratedFlower] = useState<string | null>(null);
   const [letterDesign, setLetterDesign] = useState<FullDesign>(DESIGNS[0]);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   // AI Form States
   const [showAIForm, setShowAIForm] = useState(false);
@@ -65,17 +71,117 @@ const App: React.FC = () => {
 
   // Check URL for shared note
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setIsAuthReady(true);
+    });
+
     const params = new URLSearchParams(window.location.search);
+    const letterId = params.get('id');
     const note = params.get('note');
-    if (note) {
-      try {
-        setDraftContent(decodeURIComponent(note));
-        setViewState('final');
-      } catch (e) {
-        console.error("Failed to parse note from URL");
+    const designId = params.get('design');
+    const flower = params.get('flower');
+    const recipient = params.get('to');
+
+    const loadLetter = async () => {
+      if (letterId) {
+        setLoading(true);
+        try {
+          const letterDoc = await getDoc(doc(db, 'letters', letterId));
+          if (letterDoc.exists()) {
+            const data = letterDoc.data();
+            setDraftContent(data.content);
+            setLetterDesign(data.design);
+            setGeneratedFlower(data.flower);
+            setLetterForm(prev => ({ ...prev, recipient: data.recipient || '' }));
+            setViewState('final');
+          }
+        } catch (e) {
+          handleFirestoreError(e, OperationType.GET, `letters/${letterId}`);
+        } finally {
+          setLoading(false);
+        }
+        return;
       }
-    }
+
+      if (note) {
+        try {
+          const decodedNote = note.startsWith('b64:') 
+            ? atob(note.substring(4)) 
+            : decodeURIComponent(note);
+          setDraftContent(decodedNote);
+          
+          if (designId) {
+            if (designId.startsWith('custom:')) {
+              try {
+                const customDesign = JSON.parse(atob(designId.substring(7)));
+                setLetterDesign(customDesign);
+              } catch (e) { console.error("Failed to parse custom design", e); }
+            } else {
+              const design = DESIGNS.find(d => d.id === designId);
+              if (design) setLetterDesign(design);
+            }
+          }
+          
+          if (flower) {
+            setGeneratedFlower(decodeURIComponent(flower));
+          }
+          
+          if (recipient) {
+            setLetterForm(prev => ({ ...prev, recipient: decodeURIComponent(recipient) }));
+          }
+
+          setViewState('final');
+        } catch (e) {
+          console.error("Failed to parse note from URL", e);
+        }
+      }
+    };
+
+    loadLetter();
+    return () => unsubscribe();
   }, []);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (e) {
+      console.error("Login failed", e);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!user) {
+      handleLogin();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Save to Firestore
+      const docRef = await addDoc(collection(db, 'letters'), {
+        content: draftContent,
+        design: letterDesign,
+        flower: generatedFlower,
+        recipient: letterForm.recipient,
+        uid: user.uid,
+        createdAt: serverTimestamp()
+      });
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      const url = `${baseUrl}?id=${docRef.id}`;
+      setShareUrl(url);
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(url).then(() => {
+        // alert("Imperial link copied to clipboard! You can now send this to your recipient.");
+      });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.CREATE, 'letters');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [selectedCategory, setSelectedCategory] = useState<LetterCategory>(LetterCategory.PERSONAL);
   const filteredTemplates = LETTER_TEMPLATES.filter(t => t.category === selectedCategory);
@@ -143,6 +249,13 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-6 pt-10 relative z-10">
         
+        {shareUrl && (
+          <ShareModal 
+            url={shareUrl} 
+            onClose={() => setShareUrl(null)} 
+          />
+        )}
+
         {viewState === 'draft' && (
           <div className="flex justify-center mb-12">
             <div className="bg-white/80 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-stone-200 flex gap-1">
@@ -180,6 +293,7 @@ const App: React.FC = () => {
                 recipientName={letterForm.recipient}
                 onEdit={() => setViewState('design')} 
                 onReset={handleReset}
+                onShare={handleShare}
               />
             ) : viewState === 'design' ? (
               <DesignSelector 
@@ -187,6 +301,14 @@ const App: React.FC = () => {
                 onSelect={setLetterDesign}
                 onConfirm={() => setViewState('final')}
                 onBack={() => setViewState('draft')}
+                onCustomise={() => setViewState('customise')}
+              />
+            ) : viewState === 'customise' ? (
+              <DesignCustomizer 
+                design={letterDesign}
+                onChange={setLetterDesign}
+                onConfirm={() => setViewState('final')}
+                onBack={() => setViewState('design')}
               />
             ) : (
               <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
