@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 50809a2467992638975405fc054dc85dfe52d1d8)"},{"type":"resource","resource":{"uri":"repo://coderhema/Amour-Flora/sha/5c72a1e4a2f52f950019dedc74ee2572c7f5dcbb/contents/App.tsx","mimeType":"text/plain; charset=utf-8","text":"
 import React, { useState, useEffect } from 'react';
 import { AppTab, LetterOccasion, LetterTone, FlowerStyle, LetterRequest, FlowerRequest, LetterCategory, FlowerOption, ColorOption, FullDesign } from './types';
 import { generateLetter, generateFlower } from './services/geminiService';
@@ -307,6 +306,7 @@ const App: React.FC = () => {
                 onEdit={() => setViewState('design')}
                 onReset={handleReset}
               />
+            ) : viewState === 'dispatch' ? (
             ) : viewState === 'design' ? (
               <DesignSelector 
                 selectedDesign={letterDesign}
